@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Discover Movies</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings_popular">Most Popular</string>
+    <string name="action_settings_vote_average">Highest Votes</string>
+    <string name="title_activity_detail">DetailActivity</string>
+
+    <string name="themoviedb_api_url">http://api.themoviedb.org/3/</string>
+    <string name="themoviedb_api_url_discover_movie_default">discover/movie</string>
+    <string name="themoviedb_api_image_url">http://image.tmdb.org/t/p/</string>
+    <string name="themoviedb_api_image_size">w185/</string>
+    <string name="themoviedb_api_sort_by_popular">sort_by=popularity.desc</string>
+    <string name="themoviedb_api_sort_by_vote_average">sort_by=vote_average.desc</string>
+    <string name="themoviedb_api_key">api_key=XXX</string>
+
+</resources>
