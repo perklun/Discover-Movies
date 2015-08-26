@@ -7,6 +7,7 @@ This is an Android app to show the most popular movies or highest rated movies b
 Technical Details
 ----
 - Uses AsyncTask to retrieve information from themoviedb API
+- Fragment supports screen rotation
 - Uses Picasso to load images into ImageView
 - Uses a custom GridViewAdapter to display movies in a grid
 
