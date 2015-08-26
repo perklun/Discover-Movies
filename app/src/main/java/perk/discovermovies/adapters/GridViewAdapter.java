@@ -25,11 +25,8 @@ import perk.discovermovies.models.Movie;
  */
 public class GridViewAdapter extends ArrayAdapter<Movie> {
 
-    private int screenwidth;
-
     public GridViewAdapter(Context context, List<Movie> objects) {
         super(context, R.layout.movie_thumbnail, objects);
-        screenwidth = getScreenWidth()/2;
     }
 
     @Override
@@ -40,23 +37,12 @@ public class GridViewAdapter extends ArrayAdapter<Movie> {
         }
         ImageView ivThumbnail = (ImageView) convertView.findViewById(R.id.ivThumbnail);
         // Resize imageview to half of screen size
-        ivThumbnail.setMaxWidth(screenwidth);
         ivThumbnail.setImageResource(0);
-        Picasso.with(getContext()).load(m.poster_url).into(ivThumbnail);
+        //Check if poster url is null
+        if(m.poster_url != null){
+            Picasso.with(getContext()).load(m.poster_url).into(ivThumbnail);
+        }
         return convertView;
-    }
-
-    /**
-     * Get width size to make sure image is displayed properly
-     *
-     * @return width
-     */
-    private int getScreenWidth(){
-        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        return size.x;
     }
 }
 

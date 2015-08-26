@@ -1,16 +1,13 @@
 package perk.discovermovies.activities;
 
-import android.content.Intent;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.squareup.picasso.Picasso;
 
 import perk.discovermovies.R;
+import perk.discovermovies.fragments.MovieDetailFragment;
 import perk.discovermovies.models.Movie;
 
 /**
@@ -19,43 +16,20 @@ import perk.discovermovies.models.Movie;
 public class DetailActivity extends AppCompatActivity {
 
     private Movie movie;
-    private TextView tvMovieTitle;
-    private TextView tvReleaseDate;
-    private TextView tvVotesAverage;
-    private TextView tvPlotSynopsis;
-    private String poster_thumbnail_url;
-    private ImageView ivThumbnail;
+    MovieDetailFragment movieDetailFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         //retrieve movie object from DiscoverActivity
-        Intent i = getIntent();
-        movie = (Movie) i.getSerializableExtra("movie");
-        setUp(movie);
-    }
-
-    /**
-     * Initiate all textviews with movie details
-     * Load movie thumbnail
-     *
-     * @param movie
-     */
-    protected void setUp(Movie movie){
-        getSupportActionBar().setTitle(movie.title);
-        tvMovieTitle = (TextView) findViewById(R.id.tvMovieTitle);
-        tvMovieTitle.setText(movie.title);
-        tvReleaseDate = (TextView) findViewById(R.id.tvReleaseDate);
-        tvReleaseDate.setText(movie.release_date);
-        tvVotesAverage = (TextView) findViewById(R.id.tvVoteAverage);
-        tvVotesAverage.setText(String.valueOf(movie.vote_average) +"/10");
-        tvPlotSynopsis = (TextView) findViewById(R.id.tvPlotSynopsis);
-        tvPlotSynopsis.setText(movie.plot_synopsis);
-        poster_thumbnail_url = movie.poster_url;
-        ImageView ivThumbnail = (ImageView) findViewById(R.id.ivDetailThumbnail);
-        ivThumbnail.setImageResource(0);
-        Picasso.with(this).load(poster_thumbnail_url).into(ivThumbnail);
+        movie = (Movie) getIntent().getSerializableExtra("movie");
+        if(savedInstanceState == null){
+            movieDetailFragment = MovieDetailFragment.newInstance(movie);
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.fl_movie_detail, movieDetailFragment);
+            ft.commit();
+        }
     }
 
     @Override

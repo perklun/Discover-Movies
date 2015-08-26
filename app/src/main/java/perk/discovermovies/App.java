@@ -23,4 +23,6 @@ public class App extends Application {
     public static Context getContext(){
         return DiscoverMovieApp.getApplicationContext();
     }
+
+
 }
