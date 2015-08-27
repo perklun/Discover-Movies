@@ -1,5 +1,6 @@
 package perk.discovermovies.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -46,6 +47,7 @@ public class DiscoverMovieFragment extends Fragment {
     private DownloadMoviesJSON dlMovieJSON;
     //Strings use to determine setting (whether movies are popular or highly rated)
     private int popular = 0;
+    private OnListItemSelectedListener listener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,14 +64,12 @@ public class DiscoverMovieFragment extends Fragment {
         gvResults.setAdapter(gridViewAdapter);
         // Set up onItemClickListener to go to DetailActivity once a movie is clicked
         gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                             @Override
-                                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                                 Intent i = new Intent(getActivity(), DetailActivity.class);
-                                                 i.putExtra("movie", list_of_movieResults.get(position));
-                                                 startActivity(i);
-                                             }
-                                         }
-        );
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Movie movie = gridViewAdapter.getItem(position);
+                listener.onItemSelected(movie);
+            }
+        });
         // If existing movie list do not exist, load new data. Default is popular
         if(list_of_movieResults.size() <= 0){
             downloadMovies(popular);
@@ -214,6 +214,24 @@ public class DiscoverMovieFragment extends Fragment {
                     Log.d("DEBUG: ", "JSONException");
                 }
             }
+        }
+    }
+
+    /**
+     * Interface to handler fragment triggered events
+     */
+    public interface OnListItemSelectedListener{
+        public void onItemSelected(Movie movie);
+
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof OnListItemSelectedListener){
+            listener = (OnListItemSelectedListener) activity;
+        } else{
+            throw new ClassCastException( activity.toString() + " implement listener");
         }
     }
 }
