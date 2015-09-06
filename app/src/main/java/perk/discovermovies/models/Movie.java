@@ -21,6 +21,7 @@ import perk.discovermovies.R;
 public class Movie implements Serializable{
 
     //Movie attributes
+    public int id;
     public String title;
     public String release_date;
     public String poster_url;
@@ -34,6 +35,7 @@ public class Movie implements Serializable{
      */
     public Movie(JSONObject jsonObject) {
         try{
+            id = jsonObject.getInt("id");
             title = jsonObject.getString("title");
             release_date = jsonObject.getString("release_date");
             StringBuilder poster_url_builder = new StringBuilder();
@@ -81,5 +83,14 @@ public class Movie implements Serializable{
             Log.d("DEBUG: ", error.toString());
         }
         return list_of_movies;
+    }
+
+    /**
+     * Get the id of the movie in a String
+     *
+     * @return id as a String
+     */
+    public String getStringId() {
+        return String.valueOf(id);
     }
 }

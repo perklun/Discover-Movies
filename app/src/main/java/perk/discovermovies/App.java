@@ -7,6 +7,7 @@ import android.content.Context;
  * Created by perk on 8/23/2015.
  */
 public class App extends Application {
+
     private static App DiscoverMovieApp = null;
 
     @Override

@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -29,10 +30,21 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import perk.discovermovies.MovieDataRestClient;
 import perk.discovermovies.R;
 import perk.discovermovies.activities.DetailActivity;
 import perk.discovermovies.adapters.GridViewAdapter;
+import perk.discovermovies.adapters.GridViewAdapter2;
 import perk.discovermovies.models.Movie;
+import perk.discovermovies.models.Movie2;
+import perk.discovermovies.models.MovieVideos;
+import perk.discovermovies.models.Review;
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import retrofit.http.Path;
+import retrofit.http.Query;
 
 /**
  * Fragment that displays movies sorted by popularity or vote_average
@@ -43,40 +55,56 @@ public class DiscoverMovieFragment extends Fragment {
 
     private GridView gvResults;
     private GridViewAdapter gridViewAdapter;
+    private GridViewAdapter2 gridViewAdapter2;
     private ArrayList<Movie> list_of_movieResults;
+    private ArrayList<Movie2.Result> list_of_movieResults2;
     private DownloadMoviesJSON dlMovieJSON;
-    //Strings use to determine setting (whether movies are popular or highly rated)
+    // Determine setting (whether movies are popular or highly rated)
     private int popular = 0;
     private OnListItemSelectedListener listener;
+    private MovieDataRestClient client;
+    private DownloadMovie dlMovie;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         list_of_movieResults = new ArrayList<Movie>();
-        gridViewAdapter = new GridViewAdapter(getActivity(), list_of_movieResults);
+        list_of_movieResults2 = new ArrayList<Movie2.Result>();
+        //gridViewAdapter = new GridViewAdapter(getActivity(), list_of_movieResults);
+        gridViewAdapter2 = new GridViewAdapter2(getActivity(), list_of_movieResults2);
+        setUpMovieDataRestClient();
+        dlMovie = new DownloadMovie();
         setRetainInstance(true);
+    }
+
+    public void setUpMovieDataRestClient() {
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setLogLevel(RestAdapter.LogLevel.FULL)
+                .setEndpoint((getString(R.string.themoviedb_api_url))).build();
+        client = restAdapter.create(MovieDataRestClient.class);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fg_discover_movie, container, false);
         gvResults = (GridView) v.findViewById(R.id.gvMovieThumbnails);
-        gvResults.setAdapter(gridViewAdapter);
+        gvResults.setAdapter(gridViewAdapter2);
         // Set up onItemClickListener to go to DetailActivity once a movie is clicked
         gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie movie = gridViewAdapter.getItem(position);
+                Movie2.Result movie = gridViewAdapter2.getItem(position);
                 listener.onItemSelected(movie);
             }
         });
         // If existing movie list do not exist, load new data. Default is popular
         if(list_of_movieResults.size() <= 0){
-            downloadMovies(popular);
+            //downloadMovies(popular);
+            dlMovie.execute(getString(R.string.themoviedb_api_sort_by_popular));
         }
         else{
             // Redraw according to new width
-            gridViewAdapter.notifyDataSetChanged();
+            gridViewAdapter2.notifyDataSetChanged();
         }
         return v;
     }
@@ -221,7 +249,7 @@ public class DiscoverMovieFragment extends Fragment {
      * Interface to handler fragment triggered events
      */
     public interface OnListItemSelectedListener{
-        public void onItemSelected(Movie movie);
+        public void onItemSelected(Movie2.Result movie);
 
     }
 
@@ -232,6 +260,37 @@ public class DiscoverMovieFragment extends Fragment {
             listener = (OnListItemSelectedListener) activity;
         } else{
             throw new ClassCastException( activity.toString() + " implement listener");
+        }
+    }
+
+    /**
+     * AsyncTask to download movie reviews using Retrofit
+     */
+    private class DownloadMovie extends AsyncTask<String, Void, Void> {
+        /**
+         * Retrieve movie reviews
+         * Inflate view for review
+         * Add review to linearlayout
+         *
+         * @param params param[0] is the movie id
+         * @return list of reviews
+         */
+        @Override
+        protected Void doInBackground(String... params) {
+            client.listMovies(params[0], getString(R.string.themoviedb_api_key_only), new Callback<Movie2>() {
+                @Override
+                public void success(Movie2 review, Response response) {
+                    gridViewAdapter2.clear();
+                    gridViewAdapter2.addAll(review.getResults());
+                    gridViewAdapter2.notifyDataSetChanged();
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    Log.d("DEBUG DownloadMovie: ", error.toString());
+                }
+            });
+            return null;
         }
     }
 }

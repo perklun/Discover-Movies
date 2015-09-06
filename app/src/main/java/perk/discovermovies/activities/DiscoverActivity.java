@@ -14,6 +14,7 @@ import perk.discovermovies.R;
 import perk.discovermovies.fragments.DiscoverMovieFragment;
 import perk.discovermovies.fragments.MovieDetailFragment;
 import perk.discovermovies.models.Movie;
+import perk.discovermovies.models.Movie2;
 
 /**
  * Main activity that displays movies based on selection filter
@@ -46,7 +47,7 @@ public class DiscoverActivity extends AppCompatActivity implements DiscoverMovie
      * If user has a tablet, set isTwoPane to true
      */
     private void determinePaneLayout() {
-        FrameLayout fragmentMovieWithList = (FrameLayout) findViewById(R.id.fl_large_movie_details);
+        FrameLayout fragmentMovieWithList = (FrameLayout) findViewById(R.id.fl_movie_detail);
         // If there is a second panel for details
         if(fragmentMovieWithList != null){
             isTwoPane = true;
@@ -70,14 +71,14 @@ public class DiscoverActivity extends AppCompatActivity implements DiscoverMovie
         if (id == R.id.action_settings_popular) {
             if(settings != popular){
                 settings = popular;
-                discoverMovieFragment.downloadMovies(popular);
+                //discoverMovieFragment.downloadMovies(popular);
             }
             return true;
         }
         if (id == R.id.action_settings_vote_average) {
             if(settings != vote_average){
                 settings = vote_average;
-                discoverMovieFragment.downloadMovies(vote_average);
+                //discoverMovieFragment.downloadMovies(vote_average);
             }
             return true;
         }
@@ -85,11 +86,11 @@ public class DiscoverActivity extends AppCompatActivity implements DiscoverMovie
     }
 
     @Override
-    public void onItemSelected(Movie movie) {
+    public void onItemSelected(Movie2.Result movie) {
         if(isTwoPane){
             MovieDetailFragment movieDetailFragment = MovieDetailFragment.newInstance(movie);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.fl_large_movie_details, movieDetailFragment);
+            ft.replace(R.id.fl_movie_detail, movieDetailFragment);
             ft.commit();
         } else{
             Intent i = new Intent(this, DetailActivity.class);

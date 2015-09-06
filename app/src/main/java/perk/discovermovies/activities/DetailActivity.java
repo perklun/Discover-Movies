@@ -9,13 +9,14 @@ import android.view.MenuItem;
 import perk.discovermovies.R;
 import perk.discovermovies.fragments.MovieDetailFragment;
 import perk.discovermovies.models.Movie;
+import perk.discovermovies.models.Movie2;
 
 /**
  * Activity that displays more details about the Movie
  */
 public class DetailActivity extends AppCompatActivity {
 
-    private Movie movie;
+    private Movie2.Result movie;
     MovieDetailFragment movieDetailFragment;
 
     @Override
@@ -23,7 +24,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         //retrieve movie object from DiscoverActivity
-        movie = (Movie) getIntent().getSerializableExtra("movie");
+        movie = (Movie2.Result) getIntent().getSerializableExtra("movie");
         if(savedInstanceState == null){
             movieDetailFragment = MovieDetailFragment.newInstance(movie);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();

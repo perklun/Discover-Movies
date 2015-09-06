@@ -12,6 +12,9 @@
     <string name="themoviedb_api_image_size">w185/</string>
     <string name="themoviedb_api_sort_by_popular">sort_by=popularity.desc</string>
     <string name="themoviedb_api_sort_by_vote_average">sort_by=vote_average.desc</string>
-    <string name="themoviedb_api_key">api_key=xxx</string>
+    <string name="themoviedb_api_key">api_key=0edfc190941bb48dcade093165fd273b</string>
+    <string name="themoviedb_api_key_only">0edfc190941bb48dcade093165fd273b</string>
+
+    <string name="youtube_url">http://www.youtube.com/watch?v=</string>
 
 </resources>
