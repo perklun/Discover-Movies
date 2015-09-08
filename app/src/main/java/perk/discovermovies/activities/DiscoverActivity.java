@@ -1,8 +1,10 @@
 package perk.discovermovies.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -14,30 +16,39 @@ import perk.discovermovies.R;
 import perk.discovermovies.fragments.DiscoverMovieFragment;
 import perk.discovermovies.fragments.MovieDetailFragment;
 import perk.discovermovies.models.Movie;
-import perk.discovermovies.models.Movie2;
 
 /**
  * Main activity that displays movies based on selection filter
  */
-public class DiscoverActivity extends AppCompatActivity implements DiscoverMovieFragment.OnListItemSelectedListener{
+public class DiscoverActivity extends AppCompatActivity implements DiscoverMovieFragment.OnListItemSelectedListener, MovieDetailFragment.onItemUnFavorite{
 
     private DiscoverMovieFragment discoverMovieFragment;
-    private int popular = 0;
-    private int vote_average = 1;
-    private int settings = popular;
+    private String popular;
+    private String vote_average;
+    private String favorites;
+    private String current_pref;
     private boolean isTwoPane = false;
+    private SharedPreferences pref;
+    private SharedPreferences.Editor edit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_discover);
         determinePaneLayout();
+        //Set up preferences
+        popular = getString(R.string.themoviedb_api_sort_by_popular);
+        vote_average = getString(R.string.themoviedb_api_sort_by_vote_average);
+        favorites = getString(R.string.action_settings_favorite);
+        pref = PreferenceManager.getDefaultSharedPreferences(this);
+        edit = pref.edit();
+        current_pref = pref.getString("current_pref", popular);
         // If fragment is saved, retrieve previous fragment
         FragmentManager fm = getSupportFragmentManager();
         discoverMovieFragment = (DiscoverMovieFragment) fm.findFragmentByTag("discover_movie");
         // If previous fragment does not exist, create a new fragment
         if(discoverMovieFragment == null) {
-            discoverMovieFragment = new DiscoverMovieFragment();
+            discoverMovieFragment = DiscoverMovieFragment.newInstance(current_pref);
             fm.beginTransaction().add(R.id.fl_movie_container, discoverMovieFragment, "discover_movie").commit();
         }
     }
@@ -69,24 +80,24 @@ public class DiscoverActivity extends AppCompatActivity implements DiscoverMovie
         int id = item.getItemId();
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings_popular) {
-            if(settings != popular){
-                settings = popular;
-                //discoverMovieFragment.downloadMovies(popular);
-            }
-            return true;
+            current_pref = popular;
+
         }
-        if (id == R.id.action_settings_vote_average) {
-            if(settings != vote_average){
-                settings = vote_average;
-                //discoverMovieFragment.downloadMovies(vote_average);
-            }
-            return true;
+        else if (id == R.id.action_settings_vote_average) {
+            current_pref = vote_average;
         }
+        else{
+            current_pref = favorites;
+        }
+        discoverMovieFragment.loadMovieResults(current_pref);
+        edit.remove("current_pref");
+        edit.putString("current_pref", current_pref);
+        edit.commit();
         return super.onOptionsItemSelected(item);
     }
 
     @Override
-    public void onItemSelected(Movie2.Result movie) {
+    public void onItemSelected(Movie.Result movie) {
         if(isTwoPane){
             MovieDetailFragment movieDetailFragment = MovieDetailFragment.newInstance(movie);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -97,5 +108,12 @@ public class DiscoverActivity extends AppCompatActivity implements DiscoverMovie
             i.putExtra("movie", movie);
             startActivity(i);
         }
+    }
+
+    @Override
+    public void onItemUnFav() {
+        FragmentManager fm = getSupportFragmentManager();
+        discoverMovieFragment = (DiscoverMovieFragment) fm.findFragmentByTag("discover_movie");
+        discoverMovieFragment.updateMovieResultsFromDB();
     }
 }

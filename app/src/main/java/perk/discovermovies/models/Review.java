@@ -1,5 +1,6 @@
 package perk.discovermovies.models;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -8,7 +9,7 @@ import java.util.List;
  *
  * Created by perk on 8/27/2015.
  */
-public class Review {
+public class Review implements Serializable{
 
     public String id;
     public int page;
@@ -27,7 +28,7 @@ public class Review {
     /**
      * Inner class for POJO
      */
-    public class Results{
+    public class Results implements Serializable{
         public String id;
         public String author;
         public String content;

@@ -57,6 +57,17 @@
                     android:layout_alignLeft="@+id/tvReleaseDate"
                     android:layout_alignStart="@+id/tvReleaseDate" />
             </RelativeLayout>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/ib_favorite"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:background="@null"
+                android:src="@mipmap/ic_star_empty" />
+
         </RelativeLayout>
         <TextView
             android:layout_width="wrap_content"

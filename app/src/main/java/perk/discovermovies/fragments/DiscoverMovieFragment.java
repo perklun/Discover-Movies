@@ -2,7 +2,7 @@ package perk.discovermovies.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.media.Image;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -14,37 +14,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.TextView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.activeandroid.query.Select;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
+import perk.discovermovies.App;
 import perk.discovermovies.MovieDataRestClient;
 import perk.discovermovies.R;
-import perk.discovermovies.activities.DetailActivity;
 import perk.discovermovies.adapters.GridViewAdapter;
-import perk.discovermovies.adapters.GridViewAdapter2;
 import perk.discovermovies.models.Movie;
-import perk.discovermovies.models.Movie2;
-import perk.discovermovies.models.MovieVideos;
-import perk.discovermovies.models.Review;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-import retrofit.http.Path;
-import retrofit.http.Query;
 
 /**
  * Fragment that displays movies sorted by popularity or vote_average
@@ -55,56 +41,64 @@ public class DiscoverMovieFragment extends Fragment {
 
     private GridView gvResults;
     private GridViewAdapter gridViewAdapter;
-    private GridViewAdapter2 gridViewAdapter2;
-    private ArrayList<Movie> list_of_movieResults;
-    private ArrayList<Movie2.Result> list_of_movieResults2;
-    private DownloadMoviesJSON dlMovieJSON;
-    // Determine setting (whether movies are popular or highly rated)
-    private int popular = 0;
+    private ArrayList<Movie.Result> list_of_MovieResult;
     private OnListItemSelectedListener listener;
-    private MovieDataRestClient client;
     private DownloadMovie dlMovie;
+    private String current_pref;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        list_of_movieResults = new ArrayList<Movie>();
-        list_of_movieResults2 = new ArrayList<Movie2.Result>();
-        //gridViewAdapter = new GridViewAdapter(getActivity(), list_of_movieResults);
-        gridViewAdapter2 = new GridViewAdapter2(getActivity(), list_of_movieResults2);
-        setUpMovieDataRestClient();
+        current_pref = getArguments().getString("current_pref");
+        list_of_MovieResult = new ArrayList<Movie.Result>();
+        gridViewAdapter = new GridViewAdapter(getActivity(), list_of_MovieResult);
         dlMovie = new DownloadMovie();
         setRetainInstance(true);
     }
 
-    public void setUpMovieDataRestClient() {
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setEndpoint((getString(R.string.themoviedb_api_url))).build();
-        client = restAdapter.create(MovieDataRestClient.class);
+    /**
+     * Creates a new fragment and pass in a string representing the current pref
+     *
+     * @param current_pref
+     * @return
+     */
+    public static DiscoverMovieFragment newInstance(String current_pref){
+        DiscoverMovieFragment discoverMovieFragment = new DiscoverMovieFragment();
+        Bundle args = new Bundle();
+        args.putString("current_pref", current_pref);
+        discoverMovieFragment.setArguments(args);
+        return discoverMovieFragment;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fg_discover_movie, container, false);
         gvResults = (GridView) v.findViewById(R.id.gvMovieThumbnails);
-        gvResults.setAdapter(gridViewAdapter2);
+        gvResults.setAdapter(gridViewAdapter);
         // Set up onItemClickListener to go to DetailActivity once a movie is clicked
         gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Movie2.Result movie = gridViewAdapter2.getItem(position);
+                Movie.Result movie = gridViewAdapter.getItem(position);
                 listener.onItemSelected(movie);
             }
         });
         // If existing movie list do not exist, load new data. Default is popular
-        if(list_of_movieResults.size() <= 0){
-            //downloadMovies(popular);
-            dlMovie.execute(getString(R.string.themoviedb_api_sort_by_popular));
+        if(list_of_MovieResult.size() <= 0) {
+            if (current_pref.equals(getString(R.string.action_settings_favorite))){
+                //load favs from local DB
+                List<Movie.Result> fav_list = new Movie().getResultFromDB();
+                gridViewAdapter.clear();
+                gridViewAdapter.addAll(fav_list);
+                gridViewAdapter.notifyDataSetChanged();
+            }
+            else{
+                dlMovie.execute(current_pref);
+            }
         }
         else{
             // Redraw according to new width
-            gridViewAdapter2.notifyDataSetChanged();
+            gridViewAdapter.notifyDataSetChanged();
         }
         return v;
     }
@@ -112,154 +106,53 @@ public class DiscoverMovieFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putSerializable("movie_list", list_of_movieResults);
+        //outState.putSerializable("movie_list", list_of_MovieResult);
     }
 
     /**
-     * Builds URL string based on preferences and initiates URL request
+     * Retrieve movie based on preferences
+     * If preferences are different, reload list
      *
-     * @param settings
+     * @param pref
      */
-    public void downloadMovies(int settings){
-        //format default to load movies
-        dlMovieJSON = new DownloadMoviesJSON();
-        StringBuilder default_url = new StringBuilder();
-        default_url.append(getResources().getString(R.string.themoviedb_api_url));
-        default_url.append(getResources().getString(R.string.themoviedb_api_url_discover_movie_default));
-        default_url.append("?");
-        if(settings == popular){
-            default_url.append(getResources().getString(R.string.themoviedb_api_sort_by_popular));
-        }
-        else {
-            default_url.append(getResources().getString(R.string.themoviedb_api_sort_by_vote_average));
-        }
-        default_url.append("&");
-        default_url.append(getResources().getString(R.string.themoviedb_api_key));
-        // If network is available, make request to retrieve movie data
-        if(checkNetwork()) {
-            Log.d("DEBUG: ", default_url.toString());
-            dlMovieJSON.execute(default_url.toString());
-        } else{
-            //Let user know there is no network available
-            Toast.makeText(getActivity(), "No network connection!", Toast.LENGTH_SHORT).show();
+    public void loadMovieResults(String pref){
+        //if pref changed, reload movie results
+        if(pref != current_pref){
+            current_pref = pref;
+            if(pref == getString(R.string.action_settings_favorite)) {
+                //load favs from local DB
+                gridViewAdapter.clear();
+                gridViewAdapter.addAll(new Movie().getResultFromDB());
+                gridViewAdapter.notifyDataSetChanged();
+            }
+            else{
+                //load new movie list from the movie db
+                dlMovie = new DownloadMovie();
+                dlMovie.execute(current_pref);
+            }
         }
     }
 
-    /**
-     * Method to make API request to themoviedb
-     *
-     * @param movie_url
-     * @return null or JSONObject containing movie object
-     * @throws IOException
-     */
-    private JSONObject downloadMovieData(String movie_url) throws IOException {
-        InputStream is = null;
-        try{
-            URL url = new URL(movie_url);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10000); //milliseconds
-            conn.setConnectTimeout(15000); //milliseconds
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
-            conn.setDoInput(true);
-            // Starts query
-            conn.connect();
-            int response = conn.getResponseCode();
-            if(response == 200){
-                is = conn.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                StringBuilder stringBuilder = new StringBuilder();
-                String inputString;
-                while ((inputString = bufferedReader.readLine()) != null){
-                    stringBuilder.append(inputString);
-                }
-                return new JSONObject(stringBuilder.toString());
-            } else{
-                Log.d("DEBUG: ", response + " code");
-            }
-        } catch (MalformedURLException e) {
-            Log.d("DEBUG: ", "MalformedURLException");
-        } catch (ProtocolException e) {
-            Log.d("DEBUG: ", "ProtocolException");
-        } catch (IOException e) {
-            Log.d("DEBUG: ", "IOException");
-        } catch (JSONException e) {
-            Log.d("DEBUG: ", "JSONException");
-        } finally {
-            if(is != null){
-                is.close();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Check if network is available
-     *
-     * @return true is network is connected and online
-     */
-    protected boolean checkNetwork(){
-        ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()){
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * AsyncTask to download movie data from themoviedb
-     */
-    private class DownloadMoviesJSON extends AsyncTask<String, Void, JSONObject> {
-        /**
-         * Retrieve movie data
-         *
-         * @param params
-         * @return JSONObject containing movie data
-         */
-        @Override
-        protected JSONObject doInBackground(String... params) {
-            try {
-                return downloadMovieData(params[0]);
-            } catch (IOException e) {
-                Log.d("DEBUG: ", "IOException");
-            }
-            return null;
-        }
-        /**
-         * Create list of movies from JSON response if response isn't null
-         *
-         * @param jsonObject
-         */
-        @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            if(jsonObject != null) {
-                try {
-                    gridViewAdapter.clear();
-                    gridViewAdapter.addAll(Movie.parseJSON(jsonObject.getJSONArray("results")));
-                    gridViewAdapter.notifyDataSetChanged();
-                } catch (JSONException e) {
-                    Log.d("DEBUG: ", "JSONException");
-                }
-            }
-        }
+    public void updateMovieResultsFromDB(){
+        gridViewAdapter.clear();
+        gridViewAdapter.addAll(new Movie().getResultFromDB());
+        gridViewAdapter.notifyDataSetChanged();
     }
 
     /**
      * Interface to handler fragment triggered events
      */
     public interface OnListItemSelectedListener{
-        public void onItemSelected(Movie2.Result movie);
-
+        public void onItemSelected(Movie.Result movie);
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         if(activity instanceof OnListItemSelectedListener){
             listener = (OnListItemSelectedListener) activity;
         } else{
-            throw new ClassCastException( activity.toString() + " implement listener");
+            throw new ClassCastException(activity.toString() + " implement listener");
         }
     }
 
@@ -272,21 +165,21 @@ public class DiscoverMovieFragment extends Fragment {
          * Inflate view for review
          * Add review to linearlayout
          *
-         * @param params param[0] is the movie id
+         * @param params param[0] is the movie movie_id
          * @return list of reviews
          */
         @Override
         protected Void doInBackground(String... params) {
-            client.listMovies(params[0], getString(R.string.themoviedb_api_key_only), new Callback<Movie2>() {
+            App.getClient().listMovies(params[0], getString(R.string.themoviedb_api_key_only), new Callback<Movie>() {
                 @Override
-                public void success(Movie2 review, Response response) {
-                    gridViewAdapter2.clear();
-                    gridViewAdapter2.addAll(review.getResults());
-                    gridViewAdapter2.notifyDataSetChanged();
+                public void success(Movie review, Response response) {
+                    gridViewAdapter.clear();
+                    gridViewAdapter.addAll(review.getResults());
+                    gridViewAdapter.notifyDataSetChanged();
                 }
-
                 @Override
                 public void failure(RetrofitError error) {
+                    Toast.makeText(getContext(), "Unable to load movie list. Check network connection.", Toast.LENGTH_SHORT).show();
                     Log.d("DEBUG DownloadMovie: ", error.toString());
                 }
             });

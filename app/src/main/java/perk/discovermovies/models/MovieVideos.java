@@ -1,14 +1,18 @@
 package perk.discovermovies.models;
 
+import com.activeandroid.Model;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clas to store movie videos
+ * Class to store movie's videos
  * POJO for GSON
  * Created by perk on 8/28/2015.
  */
-public class MovieVideos {
+
+public class MovieVideos implements Serializable{
 
     public int id;
     public List<Video> results;
@@ -32,7 +36,7 @@ public class MovieVideos {
         return filtered_list;
     }
 
-    public class Video{
+    public class Video implements Serializable{
         public String id;
         public String iso_639_1;
         public String key;

@@ -1,5 +1,6 @@
 package perk.discovermovies.activities;
 
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,16 +8,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import perk.discovermovies.R;
+import perk.discovermovies.fragments.DiscoverMovieFragment;
 import perk.discovermovies.fragments.MovieDetailFragment;
 import perk.discovermovies.models.Movie;
-import perk.discovermovies.models.Movie2;
 
 /**
  * Activity that displays more details about the Movie
  */
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements MovieDetailFragment.onItemUnFavorite{
 
-    private Movie2.Result movie;
+    private Movie.Result movie;
     MovieDetailFragment movieDetailFragment;
 
     @Override
@@ -24,7 +25,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         //retrieve movie object from DiscoverActivity
-        movie = (Movie2.Result) getIntent().getSerializableExtra("movie");
+        movie = (Movie.Result) getIntent().getSerializableExtra("movie");
         if(savedInstanceState == null){
             movieDetailFragment = MovieDetailFragment.newInstance(movie);
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -48,5 +49,12 @@ public class DetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         //noinspection SimplifiableIfStatement
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+     public void onItemUnFav() {
+        FragmentManager fm = getSupportFragmentManager();
+        DiscoverMovieFragment discoverMovieFragment = (DiscoverMovieFragment) fm.findFragmentByTag("discover_movie");
+        discoverMovieFragment.loadMovieResults(getString(R.string.action_settings_favorite));
     }
 }

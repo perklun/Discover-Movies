@@ -1,6 +1,6 @@
 package perk.discovermovies;
 
-import perk.discovermovies.models.Movie2;
+import perk.discovermovies.models.Movie;
 import perk.discovermovies.models.MovieVideos;
 import perk.discovermovies.models.Review;
 import retrofit.Callback;
@@ -23,28 +23,28 @@ public interface MovieDataRestClient {
      * @param reviewCallback
      */
     @Headers("Accept: application/json")
-    @GET("/discover/movie?")
-    void listMovies(@Query("sort_by") String pref, @Query("api_key") String api_key, Callback<Movie2> reviewCallback);
+    @GET("/discover/movie")
+    void listMovies(@Query("sort_by") String pref, @Query("api_key") String api_key, Callback<Movie> reviewCallback);
 
     /**
-     * Obtain list of reviews for a movie with id
+     * Obtain list of reviews for a movie with movie_id
      *
      * @param id
      * @param api_key
      * @param reviewCallback
      */
     @Headers("Accept: application/json")
-    @GET("/movie/{id}/reviews?")
-    void listReview(@Path("id") String id, @Query("api_key") String api_key, Callback<Review> reviewCallback);
+    @GET("/movie/{movie_id}/reviews")
+    void listReview(@Path("movie_id") String id, @Query("api_key") String api_key, Callback<Review> reviewCallback);
 
     /**
-     * Obtain list of videos for a movie with id
+     * Obtain list of videos for a movie with movie_id
      *
      * @param id
      * @param api_key
      * @param reviewCallback
      */
     @Headers("Accept: application/json")
-    @GET("/movie/{id}/videos")
-    void listVideos(@Path("id") String id, @Query("api_key") String api_key, Callback<MovieVideos> reviewCallback);
+    @GET("/movie/{movie_id}/videos")
+    void listVideos(@Path("movie_id") String id, @Query("api_key") String api_key, Callback<MovieVideos> reviewCallback);
 }
