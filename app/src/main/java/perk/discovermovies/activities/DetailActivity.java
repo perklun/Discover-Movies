@@ -1,5 +1,6 @@
 package perk.discovermovies.activities;
 
+import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -53,8 +54,7 @@ public class DetailActivity extends AppCompatActivity implements MovieDetailFrag
 
     @Override
      public void onItemUnFav() {
-        FragmentManager fm = getSupportFragmentManager();
-        DiscoverMovieFragment discoverMovieFragment = (DiscoverMovieFragment) fm.findFragmentByTag("discover_movie");
-        discoverMovieFragment.loadMovieResults(getString(R.string.action_settings_favorite));
+        Intent i = new Intent(DetailActivity.this, DiscoverActivity.class);
+        startActivity(i);
     }
 }

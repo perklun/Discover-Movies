@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.activeandroid.Model;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashSet;
@@ -40,7 +41,7 @@ import retrofit.client.Response;
  */
 public class MovieDetailFragment extends Fragment {
 
-    private Movie.Result movie;
+    protected Movie.Result movie;
     private TextView tvMovieTitle;
     private TextView tvReleaseDate;
     private TextView tvVotesAverage;
@@ -83,8 +84,10 @@ public class MovieDetailFragment extends Fragment {
             mv = (MovieVideos) savedInstanceState.getSerializable("mv");
             r = (Review) savedInstanceState.getSerializable("r");
         }
-
         movie = (Movie.Result) getArguments().getSerializable("movie");
+
+
+
         // Set up layout params for later view inflation
         lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.setMargins(0,Math.round(getActivity().getResources().getDimension(R.dimen.views_margin)),0,0);
@@ -139,13 +142,15 @@ public class MovieDetailFragment extends Fragment {
                 if(is_favorite){
                     ib_favorite.setImageResource(R.mipmap.ic_star_empty);
                     fav_movies.remove(movie.getStringId());
-                    movie.delete();
+                    //TODO: fix delete error
+                    //movie.delete();
                     listener.onItemUnFav();
                 }
                 else{
                     ib_favorite.setImageResource(R.mipmap.ic_star_full);
                     fav_movies.add(movie.getStringId());
                     movie.save();
+                    Log.d("ERROR: ", String.valueOf(movie.getId()));
                 }
                 edit.remove("fav");
                 edit.putStringSet("fav", fav_movies);
