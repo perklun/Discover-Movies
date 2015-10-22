@@ -16,3 +16,7 @@ Note: The API Key is removed in strings.xml
 <string name="themoviedb_api_key">api_key=XXX</string>
 ```
 
+Walkthrough
+---
+![Video Walkthrough](Discover-movies.gif)
+
